@@ -393,6 +393,41 @@ table.alt td.num.hi{color:var(--rim-bright)}
 .history-nums b{color:var(--rim-bright);font-weight:500}
 .history-total{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid rgba(107,76,26,.4)}
 
+/* ───────── COMMUNITY DASHBOARD ───────── */
+.community-panel{
+  background:linear-gradient(160deg,#231808,#1a1206);
+  border:1px solid var(--rim);border-radius:4px;
+  margin-top:20px;overflow:hidden;position:relative;
+}
+.community-panel::before{
+  content:'';display:block;position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim) 30%,var(--rim) 70%,transparent);
+}
+.community-inner{padding:16px 18px}
+.community-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch;margin-top:12px}
+.community-bars{display:flex;flex-direction:column;gap:9px}
+.c-bar-row{display:flex;align-items:center;gap:9px}
+.c-bar-lbl{width:56px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.c-dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+.c-dot.g{background:var(--rim-bright)}.c-dot.s{background:var(--muted)}.c-dot.b{background:var(--rim)}
+.c-track{flex:1;height:6px;background:var(--raised);border:1px solid var(--rim);border-radius:2px;overflow:hidden}
+.c-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.c-fill.g{background:linear-gradient(90deg,var(--accent2),var(--rim-bright))}
+.c-fill.s{background:var(--muted)}
+.c-fill.b{background:var(--rim)}
+.c-pct{width:34px;text-align:right;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.c-n{width:18px;text-align:right;font-size:11px;color:var(--muted);font-family:var(--mono);opacity:.7}
+.community-total{
+  border:1px solid var(--rim);border-radius:3px;
+  padding:14px 18px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;min-width:110px;gap:3px;
+  background:var(--raised);
+}
+.c-total-val{font-size:38px;font-weight:500;line-height:1;font-family:var(--mono);color:var(--rim-bright);text-shadow:0 0 14px rgba(200,134,10,.4)}
+.c-total-lbl{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;text-align:center;margin-top:2px}
+.c-loading{color:var(--muted);font-size:13px;text-align:center;padding:18px 0}
+.c-error{color:var(--muted);font-size:12px;text-align:center;padding:12px 0;opacity:.6}
+
 /* ───────── FOOTER ───────── */
 footer{
   margin-top:48px;padding-top:20px;
@@ -1137,10 +1172,18 @@ $('target').onchange=()=>{ if(S.phase==='advice') render(); };
     if(rb) rb.onclick=()=>{ if(confirm('Azzerare lo storico?')){ H={oro:0,arg:0,bronzo:0}; saveH(); renderHistory(); } };
   }
 
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzZ0i1fjokpz3TCMMA2PUU12TlX5iROyLNd945LX97VuR1uCOez6stxaCLP6Zqs1-cRBA/exec';
+
   function recordGame(){
     if(S.score<=0) return;
     if(S.score>=400) H.oro++; else if(S.score>=300) H.arg++; else H.bronzo++;
     saveH(); renderHistory();
+    // invia al foglio Google (silenzioso, non blocca nulla)
+    if(SHEET_URL && SHEET_URL !== 'INCOLLA_QUI_URL_APPS_SCRIPT'){
+      const esito = S.score>=400?'oro':S.score>=300?'argento':'bronzo';
+      fetch(SHEET_URL+'?esito='+esito+'&punti='+S.score, {method:'GET', mode:'no-cors'})
+        .catch(()=>{});
+    }
   }
 
   // intercetta newGame
@@ -1157,6 +1200,69 @@ $('target').onchange=()=>{ if(S.phase==='advice') render(); };
   };
 
   loadH(); renderHistory();
+
+  /* ── dashboard community ── */
+  function renderCommunity(data){
+    let panel = $('community-panel');
+    if(!panel){
+      panel = document.createElement('div');
+      panel.id = 'community-panel';
+      panel.className = 'community-panel';
+      const hp = $('history-panel');
+      if(hp) hp.parentNode.insertBefore(panel, hp.nextSibling);
+    }
+    if(!data){
+      panel.innerHTML = '<div class="community-inner"><p class="section-label">Community</p><div class="c-loading">Caricamento...</div></div>';
+      return;
+    }
+    if(data.error){
+      panel.innerHTML = '<div class="community-inner"><p class="section-label">Community</p><div class="c-error">Dati non disponibili</div></div>';
+      return;
+    }
+    const tot = data.oro + data.argento + data.bronzo;
+    const pct = n => tot ? (n/tot*100).toFixed(1) : '0.0';
+    const w   = n => tot ? (n/tot*100)+'%' : '0%';
+    panel.innerHTML = `
+      <div class="community-inner">
+        <p class="section-label">Community · Tigerghost</p>
+        <div class="community-grid">
+          <div class="community-bars">
+            <div class="c-bar-row">
+              <div class="c-bar-lbl"><span class="c-dot g"></span>Oro</div>
+              <div class="c-track"><div class="c-fill g" style="width:\${w(data.oro)}"></div></div>
+              <div class="c-pct">\${pct(data.oro)}%</div>
+              <div class="c-n">\${data.oro}</div>
+            </div>
+            <div class="c-bar-row">
+              <div class="c-bar-lbl"><span class="c-dot s"></span>Argento</div>
+              <div class="c-track"><div class="c-fill s" style="width:\${w(data.argento)}"></div></div>
+              <div class="c-pct">\${pct(data.argento)}%</div>
+              <div class="c-n">\${data.argento}</div>
+            </div>
+            <div class="c-bar-row">
+              <div class="c-bar-lbl"><span class="c-dot b"></span>Bronzo</div>
+              <div class="c-track"><div class="c-fill b" style="width:\${w(data.bronzo)}"></div></div>
+              <div class="c-pct">\${pct(data.bronzo)}%</div>
+              <div class="c-n">\${data.bronzo}</div>
+            </div>
+          </div>
+          <div class="community-total">
+            <div class="c-total-val">\${tot}</div>
+            <div class="c-total-lbl">partite totali</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function fetchCommunity(){
+    renderCommunity(null);
+    fetch(SHEET_URL+'?action=stats')
+      .then(r=>r.json())
+      .then(d=>renderCommunity(d))
+      .catch(()=>renderCommunity({error:true}));
+  }
+
+  fetchCommunity();
 })();
 </script>
 </body>
