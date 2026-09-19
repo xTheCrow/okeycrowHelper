@@ -1222,36 +1222,36 @@ $('target').onchange=()=>{ if(S.phase==='advice') render(); };
     const tot = data.oro + data.argento + data.bronzo;
     const pct = n => tot ? (n/tot*100).toFixed(1) : '0.0';
     const w   = n => tot ? (n/tot*100)+'%' : '0%';
-    panel.innerHTML = `
-      <div class="community-inner">
-        <p class="section-label">Community · Tigerghost</p>
-        <div class="community-grid">
-          <div class="community-bars">
-            <div class="c-bar-row">
-              <div class="c-bar-lbl"><span class="c-dot g"></span>Oro</div>
-              <div class="c-track"><div class="c-fill g" style="width:\${w(data.oro)}"></div></div>
-              <div class="c-pct">\${pct(data.oro)}%</div>
-              <div class="c-n">\${data.oro}</div>
-            </div>
-            <div class="c-bar-row">
-              <div class="c-bar-lbl"><span class="c-dot s"></span>Argento</div>
-              <div class="c-track"><div class="c-fill s" style="width:\${w(data.argento)}"></div></div>
-              <div class="c-pct">\${pct(data.argento)}%</div>
-              <div class="c-n">\${data.argento}</div>
-            </div>
-            <div class="c-bar-row">
-              <div class="c-bar-lbl"><span class="c-dot b"></span>Bronzo</div>
-              <div class="c-track"><div class="c-fill b" style="width:\${w(data.bronzo)}"></div></div>
-              <div class="c-pct">\${pct(data.bronzo)}%</div>
-              <div class="c-n">\${data.bronzo}</div>
-            </div>
-          </div>
-          <div class="community-total">
-            <div class="c-total-val">\${tot}</div>
-            <div class="c-total-lbl">partite totali</div>
-          </div>
-        </div>
-      </div>`;
+    panel.innerHTML =
+      '<div class="community-inner">' +
+        '<p class="section-label">Community · Tigerghost</p>' +
+        '<div class="community-grid">' +
+          '<div class="community-bars">' +
+            '<div class="c-bar-row">' +
+              '<div class="c-bar-lbl"><span class="c-dot g"></span>Oro</div>' +
+              '<div class="c-track"><div class="c-fill g" style="width:' + w(data.oro) + '"></div></div>' +
+              '<div class="c-pct">' + pct(data.oro) + '%</div>' +
+              '<div class="c-n">' + data.oro + '</div>' +
+            '</div>' +
+            '<div class="c-bar-row">' +
+              '<div class="c-bar-lbl"><span class="c-dot s"></span>Argento</div>' +
+              '<div class="c-track"><div class="c-fill s" style="width:' + w(data.argento) + '"></div></div>' +
+              '<div class="c-pct">' + pct(data.argento) + '%</div>' +
+              '<div class="c-n">' + data.argento + '</div>' +
+            '</div>' +
+            '<div class="c-bar-row">' +
+              '<div class="c-bar-lbl"><span class="c-dot b"></span>Bronzo</div>' +
+              '<div class="c-track"><div class="c-fill b" style="width:' + w(data.bronzo) + '"></div></div>' +
+              '<div class="c-pct">' + pct(data.bronzo) + '%</div>' +
+              '<div class="c-n">' + data.bronzo + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="community-total">' +
+            '<div class="c-total-val">' + tot + '</div>' +
+            '<div class="c-total-lbl">partite totali</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
   }
 
   function fetchCommunity(){
