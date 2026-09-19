@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Okey · xTheCrow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ───────── tokens Metin2 ───────── */
+:root{
+  --bg:          #1a1108;       /* nero pergamena bruciata */
+  --surface:     #231a0a;       /* legno scuro */
+  --raised:      #2e2008;       /* pannello rialzato */
+  --rim:         #6b4c1a;       /* bordo oro antico scuro */
+  --rim-bright:  #b8860b;       /* bordo oro antico lucido */
+  --text:        #f0d080;       /* testo oro chiaro */
+  --muted:       #8a7040;       /* testo secondario ambra */
+  --accent:      #c8860a;       /* oro azione */
+  --accent2:     #a06808;       /* oro azione hover */
+  --card-b:      #1a3a7a;       /* blu carte */
+  --card-r:      #8a1a1a;       /* rosso carte */
+  --card-y:      #a07008;       /* giallo carte */
+  --paper:       #f5e8c0;       /* sfondo verdetto */
+  --ink:         #1a1108;
+  --warn:        #c87a20;
+  --red:         #c03020;
+  --green:       #4a8a30;
+  --sans:'DM Sans',ui-sans-serif,system-ui,sans-serif;
+  --mono:'DM Mono',ui-monospace,monospace;
+}
+
+/* ───────── reset ───────── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 20% 0%, #2e1a04 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, #251500 0%, transparent 60%);
+  color:var(--text);
+  font-family:var(--sans);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+button,select{font-family:var(--sans);cursor:pointer}
+:focus-visible{outline:2px solid var(--rim-bright);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ───────── layout ───────── */
+.page{max-width:980px;margin:0 auto;padding:24px 18px 56px}
+
+/* ───────── header ───────── */
+header{
+  display:flex;align-items:center;gap:16px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--rim);
+  margin-bottom:28px;
+  position:relative;
+}
+header::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim-bright) 30%,var(--rim-bright) 70%,transparent);
+}
+.brand{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.brand strong{
+  color:var(--rim-bright);
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:.02em;
+  text-shadow:0 0 12px rgba(200,134,10,.4);
+}
+.scoreline{margin-left:auto;display:flex;align-items:baseline;gap:8px}
+.pts{
+  font-family:var(--mono);font-size:36px;font-weight:500;line-height:1;
+  color:var(--rim-bright);
+  text-shadow:0 0 16px rgba(200,134,10,.5);
+}
+.pts.gold{color:#f0c030;text-shadow:0 0 20px rgba(240,192,48,.6)}
+.goal-label{font-size:12px;color:var(--muted)}
+
+/* barra progresso */
+.bar-wrap{
+  position:relative;height:4px;
+  background:var(--raised);
+  border:1px solid var(--rim);
+  margin-top:14px;
+}
+.bar-fill{
+  position:absolute;left:0;top:0;bottom:0;
+  background:linear-gradient(90deg,var(--accent2),var(--rim-bright));
+  box-shadow:0 0 8px rgba(200,134,10,.6);
+  transition:width .4s cubic-bezier(.25,.8,.25,1);
+}
+.bar-fill.gold{
+  background:linear-gradient(90deg,#c8900f,#f0c030);
+  box-shadow:0 0 12px rgba(240,192,48,.7);
+}
+.bar-tick{position:absolute;left:75%;top:-4px;bottom:-4px;width:1px;background:var(--rim-bright);opacity:.4}
+
+/* ───────── body grid ───────── */
+.body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+@media(max-width:800px){.body{grid-template-columns:1fr}#out{order:-1}}
+
+/* ───────── label sezione ───────── */
+.section-label{
+  font-size:11px;font-weight:600;color:var(--rim-bright);
+  letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:10px;opacity:.8;
+}
+
+/* ───────── MANO ───────── */
+.hand{display:flex;gap:8px;flex-wrap:wrap;min-height:88px;margin-bottom:28px}
+
+.card{
+  width:58px;height:82px;border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;flex:0 0 auto;position:relative;overflow:hidden;
+  border:1px solid rgba(0,0,0,.6);
+}
+.card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(145deg,rgba(255,255,255,.08) 0%,transparent 60%);
+  pointer-events:none;
+}
+.card .n{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1;position:relative}
+.card .col{font-size:10px;font-weight:600;letter-spacing:.08em;opacity:.75;text-transform:uppercase;position:relative}
+
+.card.kb{
+  background:linear-gradient(160deg,#24508a,var(--card-b));
+  color:#c8dcf8;
+  box-shadow:0 3px 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(100,160,255,.15);
+}
+.card.kr{
+  background:linear-gradient(160deg,#a02020,var(--card-r));
+  color:#f8d0c8;
+  box-shadow:0 3px 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,120,100,.15);
+}
+.card.kg{
+  background:linear-gradient(160deg,#c09010,var(--card-y));
+  color:#1a1000;
+  box-shadow:0 3px 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,210,80,.25);
+}
+.card.ghost{
+  background:linear-gradient(160deg,#2a1c06,#1f1504);
+  border:1px dashed var(--rim);
+  color:var(--muted);font-size:20px;justify-content:center;
+  box-shadow:none;
+}
+.card.ghost::before{display:none}
+.card.mini{width:40px;height:56px;border-radius:3px}
+.card.mini .n{font-size:20px}
+.card.mini .col{font-size:9px}
+.card.hl{
+  box-shadow:0 0 0 2px var(--rim-bright),0 0 14px rgba(200,134,10,.6),0 3px 10px rgba(0,0,0,.6);
+}
+
+/* ───────── MAZZO ───────── */
+.deck-wrap{margin-bottom:26px}
+.deck-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-bottom:3px}
+.slot{
+  height:28px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12px;font-weight:500;
+  border:1px solid transparent;
+  transition:filter .12s;
+}
+.slot.kb{background:var(--card-b);color:#c8dcf8;border-color:rgba(100,160,255,.2)}
+.slot.kr{background:var(--card-r);color:#f8d0c8;border-color:rgba(255,100,80,.2)}
+.slot.kg{background:var(--card-y);color:#1a1000;border-color:rgba(255,210,60,.2)}
+.slot.gone{background:var(--raised);border-color:var(--rim);color:var(--muted);opacity:.5}
+.slot.mine{box-shadow:inset 0 0 0 1.5px var(--rim-bright)}
+.slot.tap{cursor:pointer}
+.slot.tap:hover{filter:brightness(1.25)}
+
+/* ───────── INPUT TASTIERINO ───────── */
+.keypad{
+  display:none;position:fixed;inset:0;z-index:50;
+  background:rgba(15,10,2,.9);backdrop-filter:blur(6px);
+  align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0);
+}
+.keypad.open{display:flex}
+.kp-inner{
+  background:var(--surface);
+  border:1px solid var(--rim-bright);
+  border-bottom:0;border-radius:8px 8px 0 0;
+  padding:20px 20px 32px;width:100%;max-width:360px;
+  box-shadow:0 -4px 24px rgba(200,134,10,.15);
+}
+.kp-title{font-size:13px;color:var(--muted);margin-bottom:16px;text-align:center}
+.kp-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.kp-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.kp-btn{
+  height:52px;
+  border:1px solid var(--rim);border-radius:4px;
+  background:var(--raised);color:var(--text);
+  font-size:17px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .12s,border-color .12s;
+}
+.kp-btn:hover,.kp-btn:active{background:var(--rim);border-color:var(--rim-bright)}
+.kp-btn.col-b{background:var(--card-b);color:#c8dcf8;border-color:transparent}
+.kp-btn.col-r{background:var(--card-r);color:#f8d0c8;border-color:transparent}
+.kp-btn.col-g{background:var(--card-y);color:#1a1000;border-color:transparent}
+.kp-btn.col-b:hover{filter:brightness(1.2)}.kp-btn.col-r:hover{filter:brightness(1.2)}.kp-btn.col-g:hover{filter:brightness(1.2)}
+.kp-state{text-align:center;font-family:var(--mono);font-size:14px;color:var(--rim-bright);height:18px;margin-bottom:10px}
+.kp-cancel{width:100%;border:0;background:none;color:var(--muted);font-size:13px;padding:6px 0;cursor:pointer}
+.kp-cancel:hover{color:var(--text)}
+
+/* ───────── CONTROLLI ───────── */
+.controls{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.ctrl-btn{
+  background:var(--raised);
+  border:1px solid var(--rim);
+  color:var(--muted);
+  font-size:13px;padding:7px 14px;
+  transition:color .12s,border-color .12s,background .12s;
+}
+.ctrl-btn:first-child{border-radius:3px 0 0 3px}
+.ctrl-btn:last-child{border-radius:0 3px 3px 0}
+.ctrl-btn:not(:first-child){border-left:0}
+.ctrl-btn:hover{color:var(--text);border-color:var(--rim-bright);background:#3a2808}
+.ctrl-btn[disabled]{opacity:.35;cursor:default}
+.ctrl-btn.mobile-add{
+  display:none;
+  background:var(--accent);color:#1a1000;
+  border-color:var(--rim-bright);font-weight:700;
+  padding:7px 18px;
+}
+.ctrl-btn.mobile-add:hover{background:var(--rim-bright)}
+@media(max-width:600px){.ctrl-btn.mobile-add{display:flex;align-items:center;gap:6px}}
+select.ctrl-btn{appearance:none;-webkit-appearance:none}
+.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.55}
+
+/* ───────── VERDETTO ───────── */
+#out{position:sticky;top:20px}
+
+.verdict{
+  background:linear-gradient(160deg,#2a1f08,#1f1506);
+  border:1px solid var(--rim);
+  border-radius:4px;
+  overflow:hidden;
+  box-shadow:0 0 0 1px #000 inset,0 4px 24px rgba(0,0,0,.5);
+}
+.verdict::before{
+  content:'';display:block;height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim-bright) 20%,var(--rim-bright) 80%,transparent);
+}
+
+.verdict-bar{height:3px}
+.verdict-bar.gold{background:linear-gradient(90deg,var(--accent2),#f0c030,var(--accent2))}
+.verdict-bar.silver{background:linear-gradient(90deg,#506070,#a0b8c8,#506070)}
+.verdict-bar.none{background:var(--rim)}
+
+.verdict-body{padding:20px 22px 18px}
+.verdict-phase{
+  font-size:10px;font-weight:700;color:var(--rim-bright);
+  letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;opacity:.7;
+}
+.verdict-move{
+  font-size:22px;font-weight:700;line-height:1.15;margin-bottom:14px;
+  color:var(--text);
+}
+.verdict-cards{display:flex;gap:6px;margin-bottom:16px}
+.verdict-why{
+  font-size:13.5px;color:var(--muted);
+  line-height:1.6;margin-bottom:18px;max-width:44ch;
+}
+
+/* probabilità */
+.probs{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1px;background:var(--rim);
+  border:1px solid var(--rim);border-radius:3px;overflow:hidden;
+  margin-bottom:16px;
+}
+.prob{background:var(--raised);padding:14px 16px}
+.prob .p{
+  font-family:var(--mono);font-size:28px;font-weight:500;line-height:1;
+  color:var(--text);
+}
+.prob .p.gold-num{
+  color:#f0c030;
+  text-shadow:0 0 10px rgba(240,192,48,.5);
+}
+.prob .p.silver-num{color:#a0b8c8}
+.prob .lbl{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* bottone conferma */
+.confirm-btn{
+  width:100%;padding:12px;border:1px solid var(--rim-bright);
+  border-radius:3px;
+  background:linear-gradient(160deg,#5a3a08,#3a2404);
+  color:var(--rim-bright);
+  font-size:14px;font-weight:700;letter-spacing:.02em;
+  transition:background .15s,box-shadow .15s;
+  text-shadow:0 1px 4px rgba(0,0,0,.5);
+}
+.confirm-btn:hover{
+  background:linear-gradient(160deg,#7a5010,#5a3408);
+  box-shadow:0 0 12px rgba(200,134,10,.3);
+}
+
+.undo-btn{
+  width:100%;padding:9px;
+  border:1px solid var(--rim);border-radius:3px;
+  background:none;color:var(--muted);
+  font-size:13px;font-weight:500;margin-top:8px;
+  transition:color .12s,border-color .12s;
+}
+.undo-btn:hover:not([disabled]){color:var(--text);border-color:var(--rim-bright)}
+.undo-btn[disabled]{opacity:.3;cursor:default}
+
+/* ───────── ALTERNATIVE ───────── */
+.alt-section{margin-top:1px;border-top:1px solid var(--rim);padding:14px 22px 16px}
+table.alt{width:100%;border-collapse:collapse;font-size:13px}
+table.alt tr{cursor:pointer;border-radius:2px}
+table.alt tr:hover td{background:rgba(200,134,10,.08);color:var(--text)}
+table.alt td{
+  padding:7px 6px;border-top:1px solid rgba(107,76,26,.4);
+  vertical-align:middle;color:var(--muted);
+}
+table.alt td.mv{font-weight:500;color:var(--text)}
+table.alt td.num{font-family:var(--mono);font-size:12px;white-space:nowrap;padding-left:12px}
+table.alt td.num.hi{color:var(--rim-bright)}
+
+/* ───────── ATTESA ───────── */
+.waiting{
+  background:linear-gradient(160deg,#2a1f08,#1f1506);
+  border:1px solid var(--rim);border-radius:4px;
+  padding:32px 22px;text-align:center;color:var(--muted);font-size:14px;
+}
+.waiting::before{
+  content:'';display:block;height:1px;margin-bottom:0;
+  background:linear-gradient(90deg,transparent,var(--rim-bright) 20%,var(--rim-bright) 80%,transparent);
+}
+.waiting b{color:var(--text)}
+.spinner{
+  width:28px;height:28px;
+  border:2px solid var(--rim);border-top-color:var(--rim-bright);
+  border-radius:50%;animation:spin .8s linear infinite;margin:16px auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.setup-hint{margin-top:14px;font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ───────── AVVISI ───────── */
+.alert{
+  font-size:13px;padding:10px 14px;border-radius:3px;margin-bottom:12px;
+  border-left:3px solid var(--warn);
+  background:rgba(200,122,32,.1);color:#d09040;
+}
+.alert.stop{border-color:var(--red);background:rgba(192,48,32,.1);color:#e08070}
+
+/* ───────── FINE PARTITA ───────── */
+.end-card{
+  background:linear-gradient(160deg,#2a1f08,#1f1506);
+  border:1px solid var(--rim-bright);border-radius:4px;
+  overflow:hidden;text-align:center;
+  box-shadow:0 0 24px rgba(200,134,10,.15);
+}
+.end-score{
+  font-family:var(--mono);font-size:64px;font-weight:500;
+  padding:32px 20px 8px;line-height:1;
+  color:var(--rim-bright);
+  text-shadow:0 0 24px rgba(200,134,10,.6);
+}
+.end-score.gold{color:#f0c030;text-shadow:0 0 32px rgba(240,192,48,.7)}
+.end-score.silver{color:#a0b8c8;text-shadow:0 0 16px rgba(160,184,200,.4)}
+.end-chest{font-size:15px;color:var(--muted);padding-bottom:20px}
+.end-bar{height:3px}
+
+/* ───────── STORICO ───────── */
+.history-panel{
+  background:linear-gradient(160deg,#231808,#1a1206);
+  border:1px solid var(--rim);border-radius:4px;
+  padding:16px 18px;margin-top:20px;
+  position:relative;overflow:hidden;
+}
+.history-panel::before{
+  content:'';display:block;position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim) 30%,var(--rim) 70%,transparent);
+}
+.history-rows{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.history-row{display:flex;align-items:center;gap:10px}
+.history-medal{font-size:15px;flex:0 0 20px;text-align:center}
+.history-bar-wrap{flex:1;height:5px;background:var(--raised);border:1px solid var(--rim);border-radius:2px;overflow:hidden}
+.history-bar-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.history-bar-fill.gold{background:linear-gradient(90deg,var(--accent),#f0c030)}
+.history-bar-fill.silver{background:linear-gradient(90deg,#506070,#a0b8c8)}
+.history-bar-fill.bronze{background:linear-gradient(90deg,#3a2808,#5a4010)}
+.history-nums{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;min-width:72px;text-align:right}
+.history-nums b{color:var(--rim-bright);font-weight:500}
+.history-total{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid rgba(107,76,26,.4)}
+
+/* ───────── FOOTER ───────── */
+footer{
+  margin-top:48px;padding-top:20px;
+  border-top:1px solid var(--rim);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  font-size:12px;color:var(--muted);
+  position:relative;
+}
+footer::before{
+  content:'';position:absolute;top:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim-bright) 30%,var(--rim-bright) 70%,transparent);
+}
+footer strong{color:var(--rim-bright)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ── HEADER ── -->
+<header>
+  <div>
+    <div class="brand">Okey &nbsp;<strong>Consigliere</strong></div>
+    <div class="bar-wrap" style="width:200px">
+      <div class="bar-fill" id="bar" style="width:0"></div>
+      <div class="bar-tick"></div>
+    </div>
+  </div>
+  <div class="scoreline">
+    <div class="pts" id="pts">0</div>
+    <div class="goal-label" id="goal-lbl">/ 400</div>
+  </div>
+</header>
+
+<!-- ── BODY ── -->
+<div class="body">
+
+  <!-- colonna sinistra -->
+  <div>
+    <!-- mano -->
+    <div class="section-label" id="hand-lbl">Seleziona le 5 carte iniziali</div>
+    <div class="hand" id="hand"></div>
+
+    <!-- mazzo -->
+    <div class="deck-wrap">
+      <div class="section-label">Mazzo</div>
+      <div id="deck"></div>
+      <p class="note" id="deck-note"></p>
+    </div>
+
+    <!-- controlli -->
+    <div class="controls">
+      <button class="ctrl-btn mobile-add" id="kp-open">＋ Aggiungi carta</button>
+      <button class="ctrl-btn" id="undo">Annulla</button>
+      <button class="ctrl-btn" id="reset">Nuova partita</button>
+      <select class="ctrl-btn" id="prec" title="simulazioni per mossa">
+        <option value="1200">1.200 sim</option>
+        <option value="4000" selected>4.000 sim</option>
+        <option value="12000">12.000 sim</option>
+      </select>
+      <select class="ctrl-btn" id="target" title="obiettivo della partita">
+        <option value="400">punta all'oro</option>
+        <option value="300" selected>punta all'argento</option>
+        <option value="0">punta al bronzo</option>
+      </select>
+    </div>
+    <p class="note" style="display:none" id="kb-hint">
+      Tastiera: digita il numero (1–8) poi il colore (b/r/g). Invio per confermare la mossa.
+    </p>
+  </div>
+
+  <!-- colonna destra: verdetto -->
+  <div id="out"></div>
+
+</div><!-- /body -->
+
+<!-- ── TASTIERINO MOBILE ── -->
+<div class="keypad" id="keypad">
+  <div class="kp-inner">
+    <div class="kp-title" id="kp-title">Inserisci carta</div>
+    <div class="kp-state" id="kp-state"></div>
+    <div class="kp-nums" id="kp-nums">
+      <!-- generato da JS -->
+    </div>
+    <div class="kp-cols">
+      <button class="kp-btn col-b" data-col="0">Blu</button>
+      <button class="kp-btn col-r" data-col="1">Rosso</button>
+      <button class="kp-btn col-g" data-col="2">Giallo</button>
+    </div>
+    <button class="kp-cancel" id="kp-cancel">Annulla</button>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <span>Creato da <strong>xTheCrow</strong></span>
+  <span>Probabilità stimate via Monte Carlo — confrontano le mosse, non sono previsioni assolute</span>
+</footer>
+
+</div><!-- /page -->
+
+<script>
+/* =================================================================
+   MOTORE
+   id carta = (numero-1)*3 + colore,  colore 0=blu 1=rosso 2=giallo
+   ================================================================= */
+const COL_NAME = ['blu','rosso','giallo'];
+const COL_SHORT = ['B','R','G'];
+const num = id => (id/3|0)+1;
+const col = id => id%3;
+const cid = (n,c) => (n-1)*3+c;
+const cname = id => num(id)+COL_SHORT[col(id)];
+
+function tripleScore(a,b,c){
+  const t=[a,b,c].sort((x,y)=>num(x)-num(y));
+  const n1=num(t[0]),n2=num(t[1]),n3=num(t[2]);
+  if(n1===n2&&n2===n3) return 10*(n1+1);
+  if(n2===n1+1&&n3===n1+2){
+    const same = col(t[0])===col(t[1]) && col(t[1])===col(t[2]);
+    return same ? 40+10*n1 : 10*n1;
+  }
+  return 0;
+}
+function tripleKind(cards){
+  const t=[...cards].sort((x,y)=>num(x)-num(y));
+  if(num(t[0])===num(t[2])) return 'tris';
+  const same = col(t[0])===col(t[1]) && col(t[1])===col(t[2]);
+  return same ? 'scala pura' : 'scala mista';
+}
+
+const TRIPLES=[];
+for(let a=0;a<24;a++)for(let b=a+1;b<24;b++)for(let c=b+1;c<24;c++){
+  const p=tripleScore(a,b,c);
+  if(p>0) TRIPLES.push({cards:[a,b,c],mask:(1<<a)|(1<<b)|(1<<c),pts:p});
+}
+TRIPLES.sort((x,y)=>y.pts-x.pts);
+const BY_CARD=Array.from({length:24},()=>[]);
+for(const t of TRIPLES) for(const c of t.cards) BY_CARD[c].push(t);
+
+const maskOf = arr => arr.reduce((m,c)=>m|(1<<c),0);
+function popcount(x){x=x-((x>>1)&0x55555555);x=(x&0x33333333)+((x>>2)&0x33333333);return(((x+(x>>4))&0x0F0F0F0F)*0x01010101)>>24;}
+
+function handTriples(hm){const o=[];for(const t of TRIPLES) if((t.mask&hm)===t.mask) o.push(t);return o;}
+
+function cardPotential(card,hm,am){
+  let best=0;
+  for(const t of BY_CARD[card]){
+    if((t.mask&am)!==t.mask) continue;
+    const miss=popcount(t.mask&~hm);
+    const v=t.pts*(miss===0?1:miss===1?0.55:0.3025);
+    if(v>best) best=v;
+  }
+  return best;
+}
+function worstCard(hand,hm,am){
+  let w=hand[0],wv=Infinity;
+  for(const c of hand){const v=cardPotential(c,hm,am); if(v<wv){wv=v;w=c;}}
+  return w;
+}
+
+/* massimo teorico ancora ottenibile: partizione ottima delle carte disponibili,
+   ignorando l'ordine di pescata. E' un limite superiore, serve a dimostrare
+   che un obiettivo e' diventato impossibile. */
+const mrCache=new Map();
+function maxRemaining(am){
+  if(mrCache.has(am)) return mrCache.get(am);
+  const memo=new Map();
+  function rec(mask){
+    if(mask===0) return 0;
+    const h=memo.get(mask); if(h!==undefined) return h;
+    let i=0; while(!((mask>>i)&1)) i++;
+    let best=rec(mask&~(1<<i));
+    for(const t of BY_CARD[i]){
+      if((t.mask&mask)!==t.mask) continue;
+      const v=t.pts+rec(mask&~t.mask);
+      if(v>best) best=v;
+    }
+    memo.set(mask,best); return best;
+  }
+  const r=rec(am); mrCache.set(am,r); return r;
+}
+
+const PLAY_FLOOR=50; /* calibrato per benchmark: massimizza sia media che p>=300 */
+
+function mulberry32(a){return function(){a|=0;a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+
+/* Rollout sequenziale: pesca dall'ordine pre-mescolato `order` a partire da `pos`.
+   Lo stesso ordine viene riusato per tutte le mosse candidate (variabili casuali comuni):
+   il rumore statistico si cancella nel confronto fra mosse. */
+function rollout(hand0,order,pos,score0){
+  let hand=hand0.slice(), hm=maskOf(hand), score=score0;
+  let deckLen=order.length-pos, dm=0;
+  for(let i=pos;i<order.length;i++) dm|=1<<order[i];
+  for(let g=0;g<40;g++){
+    const tr=handTriples(hm), best=tr.length?tr[0]:null;
+    if(deckLen===0){
+      if(!best) break;
+      score+=best.pts; hm&=~best.mask; hand=hand.filter(c=>!best.cards.includes(c));
+      continue;
+    }
+    if(best && best.pts>=PLAY_FLOOR){
+      score+=best.pts; hm&=~best.mask; hand=hand.filter(c=>!best.cards.includes(c));
+      for(let k=0;k<3&&deckLen>0;k++){const c=order[pos++]; deckLen--; hand.push(c); hm|=1<<c; dm&=~(1<<c);}
+    }else{
+      const w=worstCard(hand,hm,hm|dm);
+      hand=hand.filter(c=>c!==w); hm&=~(1<<w);
+      const c=order[pos++]; deckLen--; hand.push(c); hm|=1<<c; dm&=~(1<<c);
+    }
+  }
+  return score;
+}
+
+/* genera `sims` ordini di pescata casuali del mazzo residuo */
+function makeOrders(deck,sims,seed){
+  const rng=mulberry32(seed), out=[];
+  for(let i=0;i<sims;i++){
+    const o=deck.slice();
+    for(let j=o.length-1;j>0;j--){const k=(rng()*(j+1))|0; const t=o[j]; o[j]=o[k]; o[k]=t;}
+    out.push(o);
+  }
+  return out;
+}
+
+function legalMoves(hand,deckLen){
+  const hm=maskOf(hand);
+  const mv=handTriples(hm).map(t=>({type:'play',cards:t.cards.slice(),pts:t.pts}));
+  if(deckLen>0) for(const c of hand) mv.push({type:'discard',cards:[c],pts:0});
+  return mv;
+}
+
+function evalMove(m,hand,orders,score){
+  const rest=hand.filter(c=>!m.cards.includes(c));
+  const draws=m.type==='play'?3:1;
+  const sims=orders.length;
+  let h4=0,h3=0,sum=0,best=0;
+  for(const o of orders){
+    const take=Math.min(draws,o.length);
+    const h=rest.concat(o.slice(0,take));
+    const s=rollout(h,o,take,score+m.pts);
+    sum+=s; if(s>=400)h4++; if(s>=300)h3++; if(s>best)best=s;
+  }
+  return {...m,p400:h4/sims,p300:h3/sims,mean:sum/sims,best};
+}
+
+/* Ordina secondo la priorita' richiesta: oro se ancora raggiungibile, altrimenti argento,
+   altrimenti punteggio medio. Differenze piu' piccole del rumore statistico delle
+   simulazioni non vengono considerate: in quel caso decide il criterio successivo. */
+function rankMoves(res, goldPossible, sims){
+  const target = +($('target')?.value ?? 300);
+  const primKey  = target>=400?'p400':target>=300?'p300':'mean';
+  const superKey = target>=400?null:target>=300?'p400':'p300';
+
+  // tolleranza statistica per un valore di probabilità p
+  const tol = p => Math.max(2*Math.sqrt(Math.max(p,1/sims)*(1-p)/sims), 1/sims);
+
+  // miglior valore primario tra tutte le mosse
+  const bestPrim = Math.max(...res.map(r => primKey==='mean' ? r.mean : r[primKey]));
+  const primTol  = primKey==='mean' ? 0 : tol(bestPrim);
+
+  // mosse "sicure": non peggiorano il primario oltre la tolleranza
+  const safe = primKey==='mean'
+    ? res.slice()
+    : res.filter(r => r[primKey] >= bestPrim - primTol);
+
+  // tra le mosse sicure, massimizza il livello superiore (se esiste e se qualcuno lo raggiunge)
+  const hasSuper = superKey && safe.some(r => r[superKey] > 0);
+  let sorted;
+  if(hasSuper){
+    const superBest = Math.max(...safe.map(r => r[superKey]));
+    const superTol  = tol(superBest);
+    const band = r => Math.floor(r[superKey] / superTol);
+    sorted = safe.slice().sort((a,b) =>
+      (band(b) - band(a)) || (b[primKey] - a[primKey]) || (b.mean - a.mean)
+    );
+  } else {
+    sorted = safe.slice().sort((a,b) =>
+      (b[primKey] - a[primKey]) || (b.mean - a.mean)
+    );
+  }
+
+  // appendi in fondo le mosse escluse (visibili in tabella ma segnate)
+  const excluded = res.filter(r => !safe.includes(r))
+    .sort((a,b) => (b[primKey] - a[primKey]) || (b.mean - a.mean));
+  const all = [...sorted, ...excluded];
+
+  const criterion = hasSuper ? superKey : bestPrim > 0 ? primKey : 'mean';
+  return { sorted: all, safeBoundary: safe.length, criterion, tol: primTol };
+}
+
+/* ═════════════════════════════════════════════════════════════
+   STATO
+   ═════════════════════════════════════════════════════════════ */
+const S={
+  hand:[], used:new Set(), score:0,
+  phase:'setup',  // setup | draw | thinking | advice | end
+  need:5,
+  result:null, history:[], plays:[], discards:0,
+};
+const snap = () => JSON.stringify({
+  hand:S.hand, used:[...S.used], score:S.score,
+  phase:S.phase, need:S.need, plays:S.plays, discards:S.discards
+});
+const restore = s => {
+  const o=JSON.parse(s);
+  S.hand=o.hand; S.used=new Set(o.used); S.score=o.score;
+  S.phase=o.phase; S.need=o.need; S.plays=o.plays; S.discards=o.discards;
+  S.result=null;
+};
+const handCards  = () => S.hand.filter(c=>c!==null);
+const deckCards  = () => {
+  const hc=handCards();
+  const o=[]; for(let i=0;i<24;i++) if(!S.used.has(i)&&!hc.includes(i)) o.push(i);
+  return o;
+};
+const deckMask  = () => maskOf(deckCards());
+const goldOpen  = () => S.score>=400 || S.score+maxRemaining(maskOf(handCards())|deckMask())>=400;
+const pct       = x  => (x*100).toFixed(1).replace(/\.0$/,'')+'%';
+const mvLabel   = m  => m.type==='play'
+  ? 'Gioca '+m.cards.map(cname).join(' ')
+  : 'Scarta '+cname(m.cards[0]);
+
+/* ═════════════════════════════════════════════════════════════
+   RENDER
+   ═════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+
+/* ── carta DOM ── */
+function makeCard(id, cls=''){
+  const d=document.createElement('div');
+  d.className='card k'+COL_SHORT[col(id)].toLowerCase()+' '+cls;
+  d.innerHTML=`<span class="n">${num(id)}</span><span class="col">${COL_NAME[col(id)]}</span>`;
+  return d;
+}
+
+/* ── punteggio e barra ── */
+function renderScore(){
+  const el=$('pts'); el.textContent=S.score;
+  el.className='pts'+(S.score>=400?' gold':'');
+  const gold=goldOpen();
+  $('goal-lbl').textContent = S.score>=400?'oro':gold?'/ 400':'/ 300';
+  const pct=Math.min(100,S.score/400*100);
+  $('bar').style.width=pct+'%';
+  $('bar').className='bar-fill'+(S.score>=400?' gold':'');
+}
+
+/* ── mano ── */
+function renderHand(){
+  const h=$('hand'); h.innerHTML='';
+  // slot evidenziati dalla mossa consigliata
+  const hlSet=new Set();
+  if(S.phase==='advice'&&S.result){
+    const best=rankMoves(S.result,goldOpen(),+$('prec').value).sorted[0];
+    if(best.type==='play') best.cards.forEach(id=>hlSet.add(id));
+  }
+  // 5 slot fissi: carta reale, ghost in attesa, o vuoto inattivo
+  const inDraw = S.phase==='setup'||S.phase==='draw';
+  let ghostsLeft = inDraw ? S.need : 0;
+  for(let i=0;i<5;i++){
+    const c=S.hand[i];
+    if(c!==null){
+      const el=makeCard(c, hlSet.has(c)?'hl':'');
+      h.appendChild(el);
+    } else if(ghostsLeft>0){
+      const g=document.createElement('div'); g.className='card ghost'; g.textContent='+';
+      h.appendChild(g); ghostsLeft--;
+    } else {
+      // slot vuoto non in attesa (dopo scarto mentre si aspetta draw)
+      const g=document.createElement('div'); g.className='card ghost'; g.style.opacity='0';
+      h.appendChild(g);
+    }
+  }
+  $('hand-lbl').textContent =
+    S.phase==='setup' ? 'Seleziona le 5 carte iniziali' :
+    S.phase==='draw'  ? 'Inserisci '+(S.need===1?'la carta pescata':S.need+' carte pescate') :
+    'Mano';
+}
+
+/* ── mazzo ── */
+function renderDeck(){
+  const box=$('deck'); box.innerHTML='';
+  for(let c=0;c<3;c++){
+    const row=document.createElement('div'); row.className='deck-grid';
+    for(let n=1;n<=8;n++){
+      const id=cid(n,c);
+      const mine=handCards().includes(id), gone=S.used.has(id);
+      const d=document.createElement('div');
+      d.className='slot k'+COL_SHORT[c].toLowerCase()+(gone?' gone':'')+(mine?' mine':'');
+      d.textContent=n;
+      if((S.phase==='setup'||S.phase==='draw')&&!mine&&!gone){
+        d.classList.add('tap'); d.tabIndex=0; d.title=n+' '+COL_NAME[c];
+        d.onclick   = () => addCard(id);
+        d.onkeydown = e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();addCard(id);} };
+      }
+      row.appendChild(d);
+    }
+    box.appendChild(row);
+  }
+  const left=deckCards().length;
+  const playsSummary = S.plays.length
+    ? ' Giocate: '+S.plays.map(p=>'+'+p).join(', ')+'. Scarti: '+S.discards+'.'
+    : '';
+  $('deck-note').textContent = left+' carte non ancora viste.'+playsSummary;
+}
+
+/* ── colonna destra ── */
+function renderOut(){
+  const o=$('out');
+
+  /* setup / draw */
+  if(S.phase==='setup'||S.phase==='draw'){
+    const n=S.need;
+    o.innerHTML=`<div class="waiting">
+      <div>In attesa di <b>${n}</b> cart${n===1?'a':'e'}</div>
+      <div class="setup-hint">Tocca una carta nella griglia del mazzo,<br>oppure digita il numero poi b / r / g da tastiera.</div>
+    </div>`;
+    return;
+  }
+
+  /* calcolo */
+  if(S.phase==='thinking'){
+    o.innerHTML=`<div class="waiting"><div class="spinner"></div><span id="prog">Calcolo…</span></div>`;
+    return;
+  }
+
+  /* fine partita */
+  if(S.phase==='end'){
+    const gold=S.score>=400, silver=S.score>=300;
+    const chest=gold?"Scrigno d'oro":silver?"Scrigno d'argento":"Scrigno di bronzo";
+    const cls=gold?'gold':silver?'silver':'';
+    o.innerHTML=`<div class="end-card">
+      <div class="end-bar" style="background:${gold?'linear-gradient(90deg,#c8900f,#f0c030)':silver?'linear-gradient(90deg,#708090,#a0b0c0)':'.#2a3a4a'}"></div>
+      <div class="end-score${cls?' '+cls:''}">${S.score}</div>
+      <div class="end-chest">${chest}</div>
+    </div>`;
+    return;
+  }
+
+  /* advice */
+  const sims=+$('prec').value;
+  const gold=goldOpen();
+  const {sorted,criterion,tol,safeBoundary}=rankMoves(S.result,gold,sims);
+  const best=sorted[0], next=sorted[1];
+
+  /* strip colore */
+  const useGold   = best.p400 > 0 && (target>=400 || criterion==='p400');
+  const useSilver = !useGold && best.p300 > 0;
+  const barCls    = useGold?'gold':useSilver?'silver':'none';
+
+  /* avviso obiettivo */
+  const targetVal = +($('target')?.value ?? 300);
+  const primKey2 = targetVal>=400?'p400':targetVal>=300?'p300':'mean';
+  const superKey2 = targetVal>=400?null:targetVal>=300?'p400':'p300';
+  const maxAvail = S.score + maxRemaining(maskOf(handCards())|deckMask());
+  let alert='';
+  if(targetVal>=400 && !gold){
+    alert=`<div class="alert stop">Oro non più raggiungibile (max: ${maxAvail}). Ottimizzo per l'argento.</div>`;
+  } else if(targetVal>=300 && maxAvail<300){
+    alert=`<div class="alert stop">Argento non più raggiungibile (max: ${maxAvail}). Ottimizzo il punteggio finale.</div>`;
+  }
+
+  /* motivazione */
+  let why='';
+  if(!next){
+    why='Unica mossa disponibile.';
+  } else if(criterion==='mean'){
+    why=`Batte "${mvLabel(next).toLowerCase()}" di ${(best.mean-next.mean).toFixed(0)} punti di media.`;
+  } else {
+    const gap=best[criterion]-next[criterion];
+    const what=criterion==='p400'?"sull'oro":"sull'argento";
+    why = gap<=tol
+      ? `Alla pari con "${mvLabel(next).toLowerCase()}" ${what}: decide il punteggio medio.`
+      : `Preferita a "${mvLabel(next).toLowerCase()}" di ${(gap*100).toFixed(1).replace(/\.0$/,'')} pp ${what}.`;
+  }
+  if(best.type==='play') why+=` Vale +${best.pts} pt (${tripleKind(best.cards)}).`;
+
+  /* chips carte */
+  const chips=best.cards.map(id=>`<div class="card mini k${COL_SHORT[col(id)].toLowerCase()}">
+    <span class="n">${num(id)}</span></div>`).join('');
+
+  /* righe alternative */
+  let rows='';
+  sorted.slice(1,5).forEach((m,i)=>{
+    const k=criterion==='mean'?'mean':criterion;
+    const val=criterion==='mean'?m.mean.toFixed(0):pct(m[k]);
+    const isHi = criterion==='mean' ? m.mean>=best.mean*.97 : m[k]>=best[k]*.97;
+    rows+=`<tr data-i="${i+1}">
+      <td class="mv">${mvLabel(m)}</td>
+      <td class="num">${m.pts?'+'+m.pts:'—'}</td>
+      <td class="num ${isHi?'hi':''}">${pct(m.p400)}</td>
+      <td class="num ${isHi?'hi':''}">${pct(m.p300)}</td>
+    </tr>`;
+  });
+
+  o.innerHTML=`
+    ${alert}
+    <div class="verdict">
+      <div class="verdict-bar ${barCls}"></div>
+      <div class="verdict-body">
+        <div class="verdict-phase">${best.type==='play'?'Mossa consigliata':'Scarto consigliato'} • ${targetVal>=400?'punta oro':targetVal>=300?'punta argento':'punta bronzo'}</div>
+        <div class="verdict-move">${mvLabel(best)}</div>
+        <div class="verdict-cards">${chips}</div>
+        <p class="verdict-why">${why}</p>
+        <div class="probs">
+          <div class="prob">
+            <div class="p ${useGold?'gold-num':''}">${pct(best.p400)}</div>
+            <div class="lbl">chiudi a 400+ (oro)</div>
+          </div>
+          <div class="prob">
+            <div class="p ${useSilver?'silver-num':''}">${pct(best.p300)}</div>
+            <div class="lbl">chiudi a 300+ (argento)</div>
+          </div>
+        </div>
+        <button class="confirm-btn" id="ok">${best.type==='play'?'Ho giocato questa combinazione':'Ho scartato questa carta'}</button>
+        <button class="undo-btn" id="undo-v" ${!S.history.length?'disabled':''}>↩ Annulla ultima mossa</button>
+      </div>
+      ${rows?`<div class="alt-section">
+        <div class="section-label">Alternative</div>
+        <table class="alt"><thead><tr>
+          <th style="text-align:left;font-size:11px;color:var(--muted);padding-bottom:6px">mossa</th>
+          <th style="text-align:right;font-size:11px;color:var(--muted);padding-bottom:6px;padding-left:12px">pt</th>
+          <th style="text-align:right;font-size:11px;color:var(--muted);padding-bottom:6px;padding-left:12px">oro</th>
+          <th style="text-align:right;font-size:11px;color:var(--muted);padding-bottom:6px;padding-left:12px">arg</th>
+        </tr></thead><tbody id="alts">${rows}</tbody></table>
+      </div>`:''}
+    </div>`;
+
+  $('ok').onclick=()=>apply(best);
+  document.querySelectorAll('#alts tr').forEach(tr=>tr.onclick=()=>apply(sorted[+tr.dataset.i]));
+  const undoV=$('undo-v'); if(undoV) undoV.onclick=()=>{
+    if(!S.history.length) return;
+    restore(S.history.pop());
+    if(S.phase==='advice'||S.phase==='thinking') think(); else render();
+  };
+}
+
+function render(){
+  renderScore(); renderHand(); renderDeck(); renderOut();
+  $('undo').disabled=!S.history.length;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   AZIONI
+   ═════════════════════════════════════════════════════════════ */
+function addCard(id){
+  if(S.phase!=='setup'&&S.phase!=='draw') return;
+  if(S.hand.includes(id)||S.used.has(id)) return;
+  const slot=S.hand.indexOf(null);
+  if(slot===-1) return;
+  S.hand[slot]=id; S.need--;
+  if(S.need<=0) think(); else render();
+}
+
+function apply(m){
+  S.history.push(snap());
+  if(m.type==='play'){
+    S.score+=m.pts; S.plays.push(m.pts);
+    for(const c of m.cards){ S.used.add(c); S.hand[S.hand.indexOf(c)]=null; }
+    S.need=Math.min(3,deckCards().length);
+  } else {
+    S.discards++;
+    S.used.add(m.cards[0]);
+    S.hand[S.hand.indexOf(m.cards[0])]=null;
+    S.need=Math.min(1,deckCards().length);
+  }
+  if(S.need>0){ S.phase='draw'; render(); } else think();
+}
+
+function think(){
+  const deck=deckCards();
+  const moves=legalMoves(handCards(),deck.length);
+  if(!moves.length){ S.phase='end'; S.result=null; render(); return; }
+  S.phase='thinking'; S.result=null; render();
+  const sims=+$('prec').value;
+  const seed=(S.score*7919+S.hand.length*131+S.used.size)|0;
+  const orders=makeOrders(deck,sims,seed);
+  const out=[]; let i=0;
+  const step=()=>{
+    if(i>=moves.length){ S.result=out; S.phase='advice'; render(); return; }
+    out.push(evalMove(moves[i],handCards(),orders,S.score));
+    i++;
+    const p=$('prog'); if(p) p.textContent='Calcolo… '+i+' / '+moves.length;
+    setTimeout(step,0);
+  };
+  setTimeout(step,0);
+}
+
+function newGame(){
+  S.hand=[null,null,null,null,null]; S.used=new Set(); S.score=0; S.phase='setup'; S.need=5;
+  S.result=null; S.history=[]; S.plays=[]; S.discards=0;
+  render();
+}
+
+/* ═════════════════════════════════════════════════════════════
+   CONTROLLI
+   ═════════════════════════════════════════════════════════════ */
+$('reset').onclick=()=>{ if(!S.score||confirm('Iniziare una nuova partita?')) newGame(); };
+$('undo').onclick=()=>{
+  if(!S.history.length) return;
+  restore(S.history.pop());
+  if(S.phase==='advice'||S.phase==='thinking') think(); else render();
+};
+$('prec').onchange=()=>{ if(S.phase==='advice') think(); };
+$('target').onchange=()=>{ if(S.phase==='advice') render(); };
+
+/* ── tastierino mobile ── */
+(()=>{
+  const nums=$('kp-nums');
+  for(let n=1;n<=8;n++){
+    const b=document.createElement('button'); b.className='kp-btn'; b.textContent=n;
+    b.dataset.num=n; nums.appendChild(b);
+  }
+  let pend=null;
+  const updateState=()=>{
+    $('kp-state').textContent=pend!=null?pend+' — scegli colore':'';
+  };
+  $('kp-open').onclick=()=>{
+    if(S.phase!=='setup'&&S.phase!=='draw') return;
+    pend=null; updateState();
+    $('kp-title').textContent='Carta '+(handCards().length+1)+' di '+(handCards().length+S.need);
+    $('keypad').classList.add('open');
+  };
+  $('kp-cancel').onclick=()=>{ $('keypad').classList.remove('open'); pend=null; };
+  $('kp-nums').onclick=e=>{
+    const b=e.target.closest('[data-num]'); if(!b) return;
+    pend=+b.dataset.num; updateState();
+  };
+  document.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>{
+    if(pend==null) return;
+    const id=cid(pend,+b.dataset.col);
+    if(!handCards().includes(id)&&!S.used.has(id)){
+      addCard(id);
+      if(S.need<=0){ $('keypad').classList.remove('open'); pend=null; }
+      else{
+        pend=null; updateState();
+        $('kp-title').textContent='Carta '+(handCards().length+1)+' di '+(handCards().length+S.need);
+      }
+    }
+  });
+})();
+
+/* ── tastiera fisica ── */
+(()=>{
+  let pend=null;
+  // mostra hint tastiera solo su desktop
+  if(window.matchMedia&&window.matchMedia('(hover:hover)').matches) $('kb-hint').style.display='block';
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='SELECT'||e.target.tagName==='INPUT') return;
+    // Invio = conferma mossa consigliata
+    if(e.key==='Enter'&&S.phase==='advice'){
+      e.preventDefault();
+      const ok=$('ok'); if(ok) ok.click(); return;
+    }
+    if(S.phase!=='setup'&&S.phase!=='draw') return;
+    const k=e.key.toLowerCase();
+    if(k>='1'&&k<='8'){ pend=+k; return; }
+    const colMap={b:0,r:1,g:2};
+    if(colMap[k]!==undefined&&pend){
+      addCard(cid(pend,colMap[k])); pend=null;
+    }
+    if(k==='escape') pend=null;
+  });
+})();
+
+/* persistenza sessione (localStorage) */
+(()=>{
+  const KEY='okey_session'; const LS=typeof localStorage!=='undefined'?localStorage:{getItem:()=>null,setItem:()=>{}};
+  // ripristina se c'è uno stato salvato
+  try{
+    const raw=LS.getItem(KEY);
+    if(raw){
+      const o=JSON.parse(raw);
+      if(o.hand&&o.used){
+        S.hand=o.hand; S.used=new Set(o.used); S.score=o.score;
+        S.phase=o.phase==='thinking'?'draw':o.phase;
+        S.need=o.need; S.plays=o.plays||[]; S.discards=o.discards||0;
+        S.history=o.history||[];
+        if(o.prec && $('prec')) $('prec').value=o.prec;
+        if(o.target && $('target')) $('target').value=o.target;
+        if(S.phase==='advice') think(); else render();
+        return;
+      }
+    }
+  } catch(e){}
+  newGame();
+  // salva dopo ogni render
+  const origRender=render;
+  window.addEventListener('beforeunload',()=>{
+    try{ LS.setItem(KEY,JSON.stringify({
+      hand:S.hand,used:[...S.used],score:S.score,phase:S.phase,need:S.need,
+      plays:S.plays,discards:S.discards,history:S.history
+    })); } catch(e){}
+  });
+})();
+
+/* ═════════════════════════════════════════════════════════════
+   STORICO PARTITE
+   ═════════════════════════════════════════════════════════════ */
+(()=>{
+  const LS_KEY='okey_history';
+  let H={oro:0,arg:0,bronzo:0};
+
+  function loadH(){
+    try{ const r=localStorage.getItem(LS_KEY); if(r) H=JSON.parse(r); }catch(e){}
+  }
+  function saveH(){
+    try{ localStorage.setItem(LS_KEY,JSON.stringify(H)); }catch(e){}
+  }
+  function renderHistory(){
+    // crea o aggiorna il pannello
+    let panel=$('history-panel');
+    if(!panel){
+      panel=document.createElement('div');
+      panel.id='history-panel';
+      panel.className='history-panel';
+      // inseriscilo dopo i controlli
+      const ctrl=document.querySelector('.controls');
+      if(ctrl) ctrl.parentNode.insertBefore(panel,ctrl.nextSibling);
+      else document.querySelector('.page').appendChild(panel);
+    }
+    const tot=H.oro+H.arg+H.bronzo;
+    if(tot===0){
+      panel.innerHTML='<div class="section-label">Storico partite</div><p class="note" style="color:var(--muted)">Nessuna partita completata ancora.</p>';
+      return;
+    }
+    const pct=n=>tot?Math.round(n/tot*100):0;
+    const row=(cls,medal,label,n)=>`
+      <div class="history-row">
+        <span class="history-medal">${medal}</span>
+        <div class="history-bar-wrap"><div class="history-bar-fill ${cls}" style="width:${pct(n)}%"></div></div>
+        <div class="history-nums"><b>${pct(n)}%</b> <span>${n}/${tot}</span></div>
+      </div>`;
+    panel.innerHTML=`
+      <div class="section-label">Storico partite</div>
+      <div class="history-rows">
+        ${row('gold','🥇','Oro ≥400',H.oro)}
+        ${row('silver','🥈','Argento 300–399',H.arg)}
+        ${row('bronze','🟫','Bronzo <300',H.bronzo)}
+      </div>
+      <div class="history-total">${tot} partit${tot===1?'a':'e'} totali
+        <button style="float:right;background:none;border:0;font-size:11px;color:var(--muted);cursor:pointer" id="reset-history">Azzera</button>
+      </div>`;
+    const rb=$('reset-history');
+    if(rb) rb.onclick=()=>{ if(confirm('Azzerare lo storico?')){ H={oro:0,arg:0,bronzo:0}; saveH(); renderHistory(); } };
+  }
+
+  function recordGame(){
+    if(S.score<=0) return;
+    if(S.score>=400) H.oro++; else if(S.score>=300) H.arg++; else H.bronzo++;
+    saveH(); renderHistory();
+  }
+
+  // intercetta newGame
+  const origNewGame=newGame;
+  window.newGame=function(){
+    recordGame();
+    origNewGame();
+    renderHistory();
+  };
+
+  // intercetta reset btn
+  $('reset').onclick=()=>{
+    if(!S.score||confirm('Iniziare una nuova partita?')) window.newGame();
+  };
+
+  loadH(); renderHistory();
+})();
+</script>
+</body>
+</html>
