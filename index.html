@@ -324,6 +324,9 @@ table.alt td{
 table.alt td.mv{font-weight:500;color:var(--text)}
 table.alt td.num{font-family:var(--mono);font-size:12px;white-space:nowrap;padding-left:12px}
 table.alt td.num.hi{color:var(--rim-bright)}
+table.alt tr.unsafe td{opacity:.5}
+.warn-dot{display:inline-block;width:13px;height:13px;line-height:13px;text-align:center;border-radius:50%;
+  background:rgba(192,48,32,.25);color:#e08070;font-size:10px;font-weight:700;margin-right:6px}
 
 /* ───────── ATTESA ───────── */
 .waiting{
@@ -482,16 +485,7 @@ footer strong{color:var(--rim-bright)}
       <button class="ctrl-btn mobile-add" id="kp-open">＋ Aggiungi carta</button>
       <button class="ctrl-btn" id="undo">Annulla</button>
       <button class="ctrl-btn" id="reset">Nuova partita</button>
-      <select class="ctrl-btn" id="prec" title="simulazioni per mossa">
-        <option value="1200">1.200 sim</option>
-        <option value="4000" selected>4.000 sim</option>
-        <option value="12000">12.000 sim</option>
-      </select>
-      <select class="ctrl-btn" id="target" title="obiettivo della partita">
-        <option value="400">punta all'oro</option>
-        <option value="300" selected>punta all'argento</option>
-        <option value="0">punta al bronzo</option>
-      </select>
+
     </div>
     <p class="note" style="display:none" id="kb-hint">
       Tastiera: digita il numero (1–8) poi il colore (b/r/g). Invio per confermare la mossa.
@@ -674,8 +668,8 @@ function evalMove(m,hand,orders,score){
 /* Ordina secondo la priorita' richiesta: oro se ancora raggiungibile, altrimenti argento,
    altrimenti punteggio medio. Differenze piu' piccole del rumore statistico delle
    simulazioni non vengono considerate: in quel caso decide il criterio successivo. */
-function rankMoves(res, goldPossible, sims){
-  const target = +($('target')?.value ?? 300);
+function rankMoves(res, _unused, sims){
+  const target = 300; // fisso: massimizza guadagni (argento prima, poi oro)
   const primKey  = target>=400?'p400':target>=300?'p300':'mean';
   const superKey = target>=400?null:target>=300?'p400':'p300';
 
@@ -778,7 +772,7 @@ function renderHand(){
   // slot evidenziati dalla mossa consigliata
   const hlSet=new Set();
   if(S.phase==='advice'&&S.result){
-    const best=rankMoves(S.result,goldOpen(),+$('prec').value).sorted[0];
+    const best=rankMoves(S.result,goldOpen(),1200).sorted[0];
     if(best.type==='play') best.cards.forEach(id=>hlSet.add(id));
   }
   // 5 slot fissi: carta reale, ghost in attesa, o vuoto inattivo
@@ -865,18 +859,18 @@ function renderOut(){
   }
 
   /* advice */
-  const sims=+$('prec').value;
+  const sims=1200;
   const gold=goldOpen();
   const {sorted,criterion,tol,safeBoundary}=rankMoves(S.result,gold,sims);
   const best=sorted[0], next=sorted[1];
 
   /* strip colore */
-  const useGold   = best.p400 > 0 && (target>=400 || criterion==='p400');
+  const useGold   = best.p400 > 0 && criterion==='p400';
   const useSilver = !useGold && best.p300 > 0;
   const barCls    = useGold?'gold':useSilver?'silver':'none';
 
   /* avviso obiettivo */
-  const targetVal = +($('target')?.value ?? 300);
+  const targetVal = 300;
   const primKey2 = targetVal>=400?'p400':targetVal>=300?'p300':'mean';
   const superKey2 = targetVal>=400?null:targetVal>=300?'p400':'p300';
   const maxAvail = S.score + maxRemaining(maskOf(handCards())|deckMask());
@@ -910,14 +904,15 @@ function renderOut(){
   let rows='';
   sorted.slice(1,5).forEach((m,i)=>{
     const k=criterion==='mean'?'mean':criterion;
-    const val=criterion==='mean'?m.mean.toFixed(0):pct(m[k]);
     const isHi = criterion==='mean' ? m.mean>=best.mean*.97 : m[k]>=best[k]*.97;
-    rows+=`<tr data-i="${i+1}">
-      <td class="mv">${mvLabel(m)}</td>
-      <td class="num">${m.pts?'+'+m.pts:'—'}</td>
-      <td class="num ${isHi?'hi':''}">${pct(m.p400)}</td>
-      <td class="num ${isHi?'hi':''}">${pct(m.p300)}</td>
-    </tr>`;
+    // oltre safeBoundary la mossa costa argento piu' del rumore statistico
+    const unsafe = (i+1) >= safeBoundary;
+    rows+='<tr data-i="'+(i+1)+'"'+(unsafe?' class="unsafe" title="sacrifica argento"':'')+'>'+
+      '<td class="mv">'+(unsafe?'<span class="warn-dot">!</span>':'')+mvLabel(m)+'</td>'+
+      '<td class="num">'+(m.pts?'+'+m.pts:'\u2014')+'</td>'+
+      '<td class="num '+(isHi?'hi':'')+'">'+pct(m.p400)+'</td>'+
+      '<td class="num '+(isHi?'hi':'')+'">'+pct(m.p300)+'</td>'+
+    '</tr>';
   });
 
   o.innerHTML=`
@@ -999,7 +994,7 @@ function think(){
   const moves=legalMoves(handCards(),deck.length);
   if(!moves.length){ S.phase='end'; S.result=null; render(); return; }
   S.phase='thinking'; S.result=null; render();
-  const sims=+$('prec').value;
+  const sims=1200;
   const seed=(S.score*7919+S.hand.length*131+S.used.size)|0;
   const orders=makeOrders(deck,sims,seed);
   const out=[]; let i=0;
@@ -1028,8 +1023,8 @@ $('undo').onclick=()=>{
   restore(S.history.pop());
   if(S.phase==='advice'||S.phase==='thinking') think(); else render();
 };
-$('prec').onchange=()=>{ if(S.phase==='advice') think(); };
-$('target').onchange=()=>{ if(S.phase==='advice') render(); };
+
+
 
 /* ── tastierino mobile ── */
 (()=>{
@@ -1104,7 +1099,6 @@ $('target').onchange=()=>{ if(S.phase==='advice') render(); };
         S.need=o.need; S.plays=o.plays||[]; S.discards=o.discards||0;
         S.history=o.history||[];
         if(o.prec && $('prec')) $('prec').value=o.prec;
-        if(o.target && $('target')) $('target').value=o.target;
         if(S.phase==='advice') think(); else render();
         return;
       }
